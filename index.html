@@ -31,7 +31,19 @@
         <select name="activity" id="dropdown"></select>
         <div id="activityDetails"></div>
       </div>
-      <div id="chart"></div>
+
+      <div id="bar-chart-container">
+        <h3>Activity Bar Chart</h3>
+        <canvas id="barChart"></canvas>
+        <img id="no-bar-data-img" src="./images.png" style="display: block;
+        margin: 0 auto; width: 100px; height: 100px";" alt="" />
+        <p
+          id="no-bar-data"
+          style="text-align: center; display: none; color: #888;"
+        >
+          No activities to display.
+        </p>
+      </div>
       <div id="today-activities">
         <div class="grouped">
           <h3>Today's Activities</h3>
@@ -48,4 +60,5 @@
     </div>
   </body>
   <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </html>

@@ -236,6 +236,7 @@ function todayAct(allActivitiesArr) {
     icon.style.margin = "0 auto";
     icon.style.width = "100px";
     icon.style.height = "100px";
+    renderBarChart([]); // No data for bar chart
   } else {
     const activities = existingDay.activities;
     const allActivities = document.querySelectorAll(".allActivities");
@@ -255,6 +256,7 @@ function todayAct(allActivitiesArr) {
       `;
       todayActivities.appendChild(activityDiv);
     });
+    renderBarChart(activities); // ✅ Pass data to bar chart
   }
 }
 
@@ -281,11 +283,72 @@ document.getElementById("dateInput").addEventListener("change", function () {
 document.getElementById("Categories").addEventListener("change", function () {
   const selectedCategory = this.value;
   const currentDate = document.getElementById("dateInput").value;
-  console.log(selectedCategory);
-
+  const existingDay = allActivitiesArr.find((day) => day.date === currentDate);
   const filteredActivities = filterActivities(currentDate, selectedCategory);
   todayAct(filteredActivities);
+  renderBarChart(existingDay ? existingDay.activities : []);
 });
+
+let barChartInstance = null;
+
+function renderBarChart(activities) {
+  const canvas = document.getElementById("barChart");
+  const noDataMsg = document.getElementById("no-bar-data");
+  const noDataImg = document.getElementById("no-bar-data-img");
+
+  if (!activities || activities.length === 0) {
+    canvas.style.display = "none";
+    noDataMsg.style.display = "block";
+    noDataImg.style.display = "block";
+    return;
+  }
+
+  // Cleanup previous chart instance if it exists
+  if (barChartInstance) {
+    barChartInstance.destroy();
+  }
+
+  // Prepare labels and data
+  const labels = activities.map((act) => act.name);
+  const data = activities.map((act) => act.totalC02);
+
+  canvas.style.display = "block";
+  noDataMsg.style.display = "none";
+  noDataImg.style.display = "none";
+
+  const ctx = canvas.getContext("2d");
+
+  barChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "CO2 Emissions (kg)",
+          data: data,
+          backgroundColor: "#36a2eb",
+          borderRadius: 5,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0,
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+      },
+    },
+  });
+}
 
 setDate();
 populateSelect();

@@ -230,3 +230,43 @@ body {
   box-shadow: 0 0 8px rgba(118, 165, 216, 0.5);
   transform: scale(1.03); /* Slightly bigger */
 }
+
+#bar-chart-container {
+  max-width: 800px;
+  margin: 0 auto;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 2px 20px 20px 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+}
+
+#bar-chart-container canvas {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+/* #barChart {
+  max-width: 800px;
+  margin: 0 auto;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  /* padding: 2px 20px 20px 20px; */
+/*background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+} */
+
+#barChart {
+  /* max-width: 800px; */
+  margin: 0 auto;
+  margin-top: 20px;
+  /* margin-bottom: 20px; */
+  /* padding: 2px 20px 20px 20px; */
+  /* background-color: #fff; */
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
+  /* border-radius: 15px; */
+}
