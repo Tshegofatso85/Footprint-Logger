@@ -121,6 +121,7 @@ function calculateTotal(quantity, co2Value, total) {
 function selectActivity() {
   const selectedOption = document.getElementById("dropdown");
   const activityDetails = document.getElementById("activityDetails");
+  const categoriesSelect = document.getElementById("Categories");
 
   selectedOption.addEventListener("change", () => {
     const selectedValue = selectedOption.value;
@@ -180,7 +181,10 @@ function selectActivity() {
 
       activityDetails.innerHTML = ``;
       selectedOption.selectedIndex = 0;
+      categoriesSelect.selectedIndex = 0;
+
       totalEmersion();
+      todayAct(allActivitiesArr);
     });
   });
 }
@@ -207,11 +211,84 @@ function totalEmersion() {
   }
 }
 
+function todayAct(allActivitiesArr) {
+  const currentDate = document.getElementById("dateInput").value;
+  console.log(currentDate);
+  let existingDay = allActivitiesArr.find((day) => day.date === currentDate);
+  const todayActivities = document.getElementById("today-activities");
+
+  const dynamicItems = todayActivities.querySelectorAll(
+    ".allActivities, p, img"
+  );
+  dynamicItems.forEach((item) => item.remove());
+
+  if (!existingDay) {
+    const icon = document.createElement("img");
+    icon.src = "./images.png";
+    todayActivities.appendChild(icon);
+    const noActivities = document.createElement("p");
+    noActivities.textContent = "No activities for today.";
+    todayActivities.appendChild(noActivities);
+    noActivities.style.textAlign = "center";
+    noActivities.style.fontSize = "20px";
+    noActivities.style.color = "#666";
+    icon.style.display = "block";
+    icon.style.margin = "0 auto";
+    icon.style.width = "100px";
+    icon.style.height = "100px";
+  } else {
+    const activities = existingDay.activities;
+    const allActivities = document.querySelectorAll(".allActivities");
+    allActivities.forEach((activity) => {
+      activity.remove();
+    });
+    activities.forEach((activity) => {
+      const activityDiv = document.createElement("div");
+      activityDiv.classList.add("allActivities");
+      activityDiv.innerHTML = `
+      <div id="each-act">
+        <p>${activity.category}</p>
+        <p><strong>Activity:</strong> ${activity.name}</p>
+        <span><strong>Quantity:</strong> ${activity.quantity}</span>
+        <span><strong>Total CO2 Emissions:</strong> ${activity.totalC02} kg</span>
+      </div>
+      `;
+      todayActivities.appendChild(activityDiv);
+    });
+  }
+}
+
+function filterActivities(date, category) {
+  const day = allActivitiesArr.find((day) => day.date === date);
+
+  if (!day) return [];
+
+  if (category === "All-Categories") {
+    return [day];
+  }
+
+  const filtered = day.activities.filter(
+    (activity) => activity.category === category
+  );
+  return [{ date: date, activities: filtered }];
+}
+
 document.getElementById("dateInput").addEventListener("change", function () {
   totalEmersion();
+  todayAct(allActivitiesArr);
+});
+
+document.getElementById("Categories").addEventListener("change", function () {
+  const selectedCategory = this.value;
+  const currentDate = document.getElementById("dateInput").value;
+  console.log(selectedCategory);
+
+  const filteredActivities = filterActivities(currentDate, selectedCategory);
+  todayAct(filteredActivities);
 });
 
 setDate();
 populateSelect();
 selectActivity();
 totalEmersion();
+todayAct(allActivitiesArr);
