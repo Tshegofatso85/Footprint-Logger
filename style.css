@@ -47,9 +47,9 @@ body {
 
   .total h2,
   .total h3 {
-    margin: 0; /* remove default spacing */
+    margin: 0;
     margin-right: 150px;
-    line-height: 1.2; /* tighten spacing between lines */
+    line-height: 1.2;
   }
 
   label {
@@ -180,11 +180,13 @@ body {
 
 #today-activities {
   max-width: 800px;
-  max-height: 800px;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
   margin: 0 auto;
   margin-top: 20px;
   margin-bottom: 20px;
-  padding: 2px 20px 20px 20px;
+  padding: 0px 20px 20px 20px;
   background-color: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border-radius: 15px;
@@ -192,7 +194,14 @@ body {
   .grouped {
     display: flex;
     justify-content: space-between;
-    padding: 15px;
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 1;
+    width: 100%;
+    margin-left: -20px;
+    margin-bottom: 10px;
+    padding: 25px;
   }
 
   select {
@@ -204,31 +213,21 @@ body {
 }
 
 #each-act {
-  /* display: flex;
-  justify-content: space-between; */
   padding: 15px;
   background-color: whitesmoke;
   box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 15px;
   border: 1px solid #585454;
-  /* box-sizing: border-box;
-  margin-top: 15px; */
   margin-bottom: 15px;
-  transition: all 0.3s ease; /* Smooth transition */
-  transform: scale(1); /* Base size */
+  transition: all 0.3s ease;
+  transform: scale(1);
 }
-/* #each-act :hover {
-  cursor: pointer;
-  background-color: #94b1d1;
-  transform: scale(1.1);
-  box-shadow: 0 0 5px rgba(118, 165, 216, 0.5);
-} */
 
 #each-act:hover {
   cursor: pointer;
   background-color: #c7d8e6;
   box-shadow: 0 0 8px rgba(118, 165, 216, 0.5);
-  transform: scale(1.03); /* Slightly bigger */
+  transform: scale(1.03);
 }
 
 #bar-chart-container {
@@ -244,29 +243,11 @@ body {
 
 #bar-chart-container canvas {
   display: block;
-  margin: 0 auto;
   max-width: 100%;
   height: auto;
+  max-height: 100%;
 }
 
-/* #barChart {
-  max-width: 800px;
-  margin: 0 auto;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  /* padding: 2px 20px 20px 20px; */
-/*background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-radius: 15px;
-} */
-
 #barChart {
-  /* max-width: 800px; */
-  margin: 0 auto;
   margin-top: 20px;
-  /* margin-bottom: 20px; */
-  /* padding: 2px 20px 20px 20px; */
-  /* background-color: #fff; */
-  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
-  /* border-radius: 15px; */
 }

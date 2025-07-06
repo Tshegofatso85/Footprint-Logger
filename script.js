@@ -213,7 +213,6 @@ function totalEmersion() {
 
 function todayAct(allActivitiesArr) {
   const currentDate = document.getElementById("dateInput").value;
-  console.log(currentDate);
   let existingDay = allActivitiesArr.find((day) => day.date === currentDate);
   const todayActivities = document.getElementById("today-activities");
 
@@ -236,7 +235,7 @@ function todayAct(allActivitiesArr) {
     icon.style.margin = "0 auto";
     icon.style.width = "100px";
     icon.style.height = "100px";
-    renderBarChart([]); // No data for bar chart
+    renderBarChart([]);
   } else {
     const activities = existingDay.activities;
     const allActivities = document.querySelectorAll(".allActivities");
@@ -256,7 +255,7 @@ function todayAct(allActivitiesArr) {
       `;
       todayActivities.appendChild(activityDiv);
     });
-    renderBarChart(activities); // ✅ Pass data to bar chart
+    renderBarChart(activities);
   }
 }
 
@@ -303,12 +302,10 @@ function renderBarChart(activities) {
     return;
   }
 
-  // Cleanup previous chart instance if it exists
   if (barChartInstance) {
     barChartInstance.destroy();
   }
 
-  // Prepare labels and data
   const labels = activities.map((act) => act.name);
   const data = activities.map((act) => act.totalC02);
 
