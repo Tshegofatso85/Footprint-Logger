@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Footprint Logger</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>🌍 Footprint Logger</h1>
+    </header>
+
+    <!-- ===================== -->
+    <!-- Authentication section -->
+    <!-- ===================== -->
+    <section id="auth-section">
+      <h2>Account</h2>
+
+      <div id="auth-forms">
+        <!-- Register -->
+        <form id="register-form">
+          <h3>Register</h3>
+          <input type="text" id="reg-name" placeholder="Name" required />
+          <input type="email" id="reg-email" placeholder="Email" required />
+          <input
+            type="password"
+            id="reg-password"
+            placeholder="Password"
+            required
+          />
+          <button type="submit">Register</button>
+        </form>
+
+        <!-- Login -->
+        <form id="login-form">
+          <h3>Login</h3>
+          <input type="email" id="login-email" placeholder="Email" required />
+          <input
+            type="password"
+            id="login-password"
+            placeholder="Password"
+            required
+          />
+          <button type="submit">Login</button>
+        </form>
+
+        <button id="logout-btn" style="display:none;">Logout</button>
+      </div>
+
+      <p id="welcome-msg"></p>
+    </section>
+
+    <hr />
+
+    <!-- ===================== -->
+    <!-- Activity logger -->
+    <!-- ===================== -->
+    <section id="logger-section" style="display:none;">
+      <h2>Log an Activity</h2>
+      <form id="activity-form">
+        <input type="date" id="date" />
+        <input
+          type="text"
+          id="activity-name"
+          placeholder="Activity name"
+          required
+        />
+        <input type="text" id="category" placeholder="Category" required />
+        <input
+          type="text"
+          id="unit"
+          placeholder="Unit (e.g. km, kWh)"
+          required
+        />
+        <input
+          type="number"
+          id="quantity"
+          step="0.01"
+          placeholder="Quantity"
+          required
+        />
+        <input
+          type="number"
+          id="co2-value"
+          step="0.01"
+          placeholder="CO₂ per unit (kg)"
+          required
+        />
+        <button type="submit">Log Activity</button>
+      </form>
+    </section>
+
+    <hr />
+
+    <!-- ===================== -->
+    <!-- Dashboard -->
+    <!-- ===================== -->
+    <section id="dashboard" style="display:none;">
+      <h2>Your Dashboard</h2>
+      <div id="log-container"></div>
+      <div id="summary"></div>
+      <div id="leaderboard"></div>
+    </section>
+
+    <script src="script.js"></script>
+    <script>
+      // ==========================
+      // Hook up auth form handlers
+      // ==========================
+      const regForm = document.getElementById("register-form");
+      const loginForm = document.getElementById("login-form");
+      const logoutBtn = document.getElementById("logout-btn");
+      const welcomeMsg = document.getElementById("welcome-msg");
+      const loggerSection = document.getElementById("logger-section");
+      const dashboard = document.getElementById("dashboard");
+
+      async function updateUI(user) {
+        if (user) {
+          welcomeMsg.textContent = `Welcome, ${user.name || user.email}`;
+          regForm.style.display = "none";
+          loginForm.style.display = "none";
+          logoutBtn.style.display = "inline-block";
+          loggerSection.style.display = "block";
+          dashboard.style.display = "block";
+        } else {
+          welcomeMsg.textContent = "";
+          regForm.style.display = "block";
+          loginForm.style.display = "block";
+          logoutBtn.style.display = "none";
+          loggerSection.style.display = "none";
+          dashboard.style.display = "none";
+        }
+      }
+
+      regForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = document.getElementById("reg-name").value;
+        const email = document.getElementById("reg-email").value;
+        const password = document.getElementById("reg-password").value;
+        try {
+          const user = await registerUser(email, password, name);
+          updateUI(user);
+        } catch (err) {
+          alert("Registration failed");
+        }
+      });
+
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
+        try {
+          const user = await loginUser(email, password);
+          updateUI(user);
+          await renderLogs();
+          await renderSummary();
+          await renderLeaderboard();
+        } catch (err) {
+          alert("Login failed");
+        }
+      });
+
+      logoutBtn.addEventListener("click", () => {
+        logoutUser();
+        updateUI(null);
+      });
+
+      // Auto-login if token exists
+      if (localStorage.getItem("token")) {
+        // Call a safe endpoint to test token
+        getWeeklySummary()
+          .then(() => {
+            updateUI({ email: "Current User" });
+            renderLogs();
+            renderSummary();
+            renderLeaderboard();
+          })
+          .catch(() => updateUI(null));
+      } else {
+        updateUI(null);
+      }
+    </script>
+  </body>
+</html>

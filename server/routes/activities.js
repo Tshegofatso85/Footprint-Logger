@@ -1,0 +1,240 @@
+const express = require("express");
+const router = express.Router();
+const ActivityLog = require("../models/ActivityLog");
+const mongoose = require("mongoose");
+
+// helper: normalize date to midnight (UTC)
+function startOfDay(d) {
+  const date = new Date(d);
+  date.setUTCHours(0, 0, 0, 0);
+  return date;
+}
+
+// create or append to a day log for user
+router.post("/log", async (req, res) => {
+  // expected body: { date: 'YYYY-MM-DD', activity: { name, category, unit, quantity, co2Value } }
+  try {
+    const userId = req.user._id;
+    const { date, activity } = req.body;
+    if (!date || !activity)
+      return res.status(400).json({ message: "date and activity required" });
+
+    const day = startOfDay(date);
+    const totalCO2 = Number(activity.quantity) * Number(activity.co2Value);
+
+    const item = {
+      name: activity.name,
+      activity: activity.activity || activity.name,
+      category: activity.category,
+      unit: activity.unit,
+      quantity: Number(activity.quantity),
+      co2Value: Number(activity.co2Value),
+      totalCO2: Number(totalCO2),
+    };
+
+    // find existing day
+    let log = await ActivityLog.findOne({ user: userId, date: day });
+    if (!log) {
+      log = new ActivityLog({ user: userId, date: day, activities: [item] });
+    } else {
+      log.activities.push(item);
+    }
+    await log.save();
+    res.json(log);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// get logs for user (optionally range)
+router.get("/my-logs", async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { from, to } = req.query; // optional YYYY-MM-DD
+    const query = { user: userId };
+    if (from || to) {
+      query.date = {};
+      if (from) query.date.$gte = startOfDay(from);
+      if (to) query.date.$lte = startOfDay(to);
+    }
+    const logs = await ActivityLog.find(query).sort({ date: -1 });
+    res.json(logs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// get total emissions for a given date (user)
+router.get("/my-total", async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const date = req.query.date || new Date().toISOString().split("T")[0];
+    const day = startOfDay(date);
+    const log = await ActivityLog.findOne({ user: userId, date: day });
+    const total = log
+      ? log.activities.reduce((s, a) => s + Number(a.totalCO2), 0)
+      : 0;
+    res.json({ date: day, total: Number(total.toFixed(2)) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// weekly summary: last 7 days totals for the user (returns array of {date, total})
+router.get("/weekly-summary", async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const end = startOfDay(req.query.end || new Date());
+    const start = new Date(end);
+    start.setUTCDate(end.getUTCDate() - 6);
+    start.setUTCHours(0, 0, 0, 0);
+
+    // aggregate per day
+    const agg = await ActivityLog.aggregate([
+      {
+        $match: {
+          user: mongoose.Types.ObjectId(userId),
+          date: { $gte: start, $lte: end },
+        },
+      },
+      { $unwind: "$activities" },
+      { $group: { _id: "$date", total: { $sum: "$activities.totalCO2" } } },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // build day list for full 7 days (fill zeros)
+    const result = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start);
+      d.setUTCDate(start.getUTCDate() + i);
+      d.setUTCHours(0, 0, 0, 0);
+      const found = agg.find((a) => new Date(a._id).getTime() === d.getTime());
+      result.push({
+        date: d.toISOString().split("T")[0],
+        total: found ? Number(found.total.toFixed(2)) : 0,
+      });
+    }
+
+    // streak: number of consecutive days ending today with total < some threshold (or >0)
+    // simple streak of days with any activity
+    let streak = 0;
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(end);
+      d.setUTCDate(end.getUTCDate() - i);
+      d.setUTCHours(0, 0, 0, 0);
+      const found = result.find(
+        (r) => r.date === d.toISOString().split("T")[0]
+      );
+      if (found && found.total > 0) streak++;
+      else if (found && found.total === 0) break;
+    }
+
+    res.json({ summary: result, streak });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Community average emission per day (across users) for date or range
+router.get("/community-average", async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const match = {};
+    if (from || to) {
+      match.date = {};
+      if (from) match.date.$gte = startOfDay(from);
+      if (to) match.date.$lte = startOfDay(to);
+    }
+    const agg = await ActivityLog.aggregate([
+      { $match: match },
+      { $unwind: "$activities" },
+      { $group: { _id: "$user", userTotal: { $sum: "$activities.totalCO2" } } },
+      {
+        $group: {
+          _id: null,
+          avgPerUser: { $avg: "$userTotal" },
+          totalAll: { $sum: "$userTotal" },
+          usersCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const out = agg[0] || { avgPerUser: 0, totalAll: 0, usersCount: 0 };
+    res.json({
+      avgPerUser: Number((out.avgPerUser || 0).toFixed(2)),
+      totalAll: Number((out.totalAll || 0).toFixed(2)),
+      usersCount: out.usersCount || 0,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Leaderboard: lowest average footprint per user over the last N days
+router.get("/leaderboard", async (req, res) => {
+  try {
+    const days = parseInt(req.query.days || "7", 10);
+    const end = startOfDay(new Date());
+    const start = new Date(end);
+    start.setUTCDate(end.getUTCDate() - (days - 1));
+    start.setUTCHours(0, 0, 0, 0);
+
+    const agg = await ActivityLog.aggregate([
+      { $match: { date: { $gte: start, $lte: end } } },
+      { $unwind: "$activities" },
+      {
+        $group: {
+          _id: { user: "$user", date: "$date" },
+          dayTotal: { $sum: "$activities.totalCO2" },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id.user",
+          avgDaily: { $avg: "$dayTotal" },
+          total: { $sum: "$dayTotal" },
+        },
+      },
+      { $sort: { avgDaily: 1 } },
+      { $limit: 10 },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $project: {
+          userId: "$_id",
+          name: "$user.name",
+          email: "$user.email",
+          avgDaily: 1,
+          total: 1,
+        },
+      },
+    ]);
+
+    res.json(
+      agg.map((a) => ({
+        userId: a.userId,
+        name: a.name,
+        email: a.email,
+        avgDaily: Number(a.avgDaily.toFixed(2)),
+        total: Number(a.total.toFixed(2)),
+      }))
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+module.exports = router;

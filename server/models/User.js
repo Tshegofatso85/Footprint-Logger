@@ -1,0 +1,11 @@
+const mongoose = require("mongoose");
+
+const UserSchema = new mongoose.Schema({
+  name: { type: String, default: "" },
+  email: { type: String, required: true, unique: true, lowercase: true },
+  passwordHash: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  // you can add profile fields later (avatar, location, etc.)
+});
+
+module.exports = mongoose.model("User", UserSchema);
