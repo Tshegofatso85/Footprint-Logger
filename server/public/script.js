@@ -117,6 +117,13 @@ function logoutUser() {
 // =====================
 // Activity logging
 // =====================
+function showLoader() {
+  document.getElementById("loader").style.display = "block";
+}
+function hideLoader() {
+  document.getElementById("loader").style.display = "none";
+}
+
 async function logActivity(date, activity) {
   return apiFetch("/activities/log", {
     method: "POST",

@@ -96,6 +96,7 @@
     <!-- ===================== -->
     <section id="dashboard" style="display:none;">
       <h2>Your Dashboard</h2>
+      <div id="loader" style="display:none;">Loading...</div>
       <div id="log-container"></div>
       <div id="summary"></div>
       <div id="leaderboard"></div>
@@ -103,15 +104,19 @@
 
     <script src="script.js"></script>
     <script>
-      // ==========================
-      // Hook up auth form handlers
-      // ==========================
       const regForm = document.getElementById("register-form");
       const loginForm = document.getElementById("login-form");
       const logoutBtn = document.getElementById("logout-btn");
       const welcomeMsg = document.getElementById("welcome-msg");
       const loggerSection = document.getElementById("logger-section");
       const dashboard = document.getElementById("dashboard");
+
+      function showLoader() {
+        document.getElementById("loader").style.display = "block";
+      }
+      function hideLoader() {
+        document.getElementById("loader").style.display = "none";
+      }
 
       async function updateUI(user) {
         if (user) {
@@ -128,6 +133,10 @@
           logoutBtn.style.display = "none";
           loggerSection.style.display = "none";
           dashboard.style.display = "none";
+          // Clear dashboard data when logged out
+          document.getElementById("log-container").innerHTML = "";
+          document.getElementById("summary").innerHTML = "";
+          document.getElementById("leaderboard").innerHTML = "";
         }
       }
 
@@ -139,8 +148,14 @@
         try {
           const user = await registerUser(email, password, name);
           updateUI(user);
+          showLoader();
+          await renderLogs();
+          await renderSummary();
+          await renderLeaderboard();
+          hideLoader();
         } catch (err) {
           alert("Registration failed");
+          hideLoader();
         }
       });
 
@@ -151,11 +166,14 @@
         try {
           const user = await loginUser(email, password);
           updateUI(user);
+          showLoader();
           await renderLogs();
           await renderSummary();
           await renderLeaderboard();
+          hideLoader();
         } catch (err) {
           alert("Login failed");
+          hideLoader();
         }
       });
 
@@ -164,16 +182,15 @@
         updateUI(null);
       });
 
-      // Auto-login if token exists
       if (localStorage.getItem("token")) {
+        showLoader();
         getWeeklySummary()
           .then(() => {
             updateUI({ email: "Current User" });
-            renderLogs();
-            renderSummary();
-            renderLeaderboard();
+            return Promise.all([renderLogs(), renderSummary(), renderLeaderboard()]);
           })
-          .catch(() => updateUI(null));
+          .catch(() => updateUI(null))
+          .finally(() => hideLoader());
       } else {
         updateUI(null);
       }
