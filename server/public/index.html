@@ -8,14 +8,17 @@
   <body>
     <header>
       <h1>🌍 Footprint Logger</h1>
+      <nav>
+        <a href="index.html">🏠 Home</a>
+        <a href="community.html">🌍 Community</a>
+      </nav>
     </header>
 
     <!-- ===================== -->
-    <!-- Authentication section -->
+    <!-- Authentication -->
     <!-- ===================== -->
     <section id="auth-section">
       <h2>Account</h2>
-
       <div id="auth-forms">
         <!-- Register -->
         <form id="register-form">
@@ -46,7 +49,6 @@
 
         <button id="logout-btn" style="display:none;">Logout</button>
       </div>
-
       <p id="welcome-msg"></p>
     </section>
 
@@ -59,19 +61,15 @@
       <h2>Log an Activity</h2>
       <form id="activity-form">
         <input type="date" id="date" />
-        <input
-          type="text"
-          id="activity-name"
-          placeholder="Activity name"
-          required
-        />
-        <input type="text" id="category" placeholder="Category" required />
-        <input
-          type="text"
-          id="unit"
-          placeholder="Unit (e.g. km, kWh)"
-          required
-        />
+
+        <!-- Dropdown for predefined activities -->
+        <select id="activity-select" required>
+          <option value="">-- Select Activity --</option>
+        </select>
+
+        <!-- Auto-filled fields -->
+        <input type="text" id="category" placeholder="Category" readonly />
+        <input type="text" id="unit" placeholder="Unit" readonly />
         <input
           type="number"
           id="quantity"
@@ -84,8 +82,9 @@
           id="co2-value"
           step="0.01"
           placeholder="CO₂ per unit (kg)"
-          required
+          readonly
         />
+
         <button type="submit">Log Activity</button>
       </form>
     </section>
@@ -167,7 +166,6 @@
 
       // Auto-login if token exists
       if (localStorage.getItem("token")) {
-        // Call a safe endpoint to test token
         getWeeklySummary()
           .then(() => {
             updateUI({ email: "Current User" });

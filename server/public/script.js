@@ -1,4 +1,79 @@
 // =====================
+// Predefined activities
+// =====================
+const activities = [
+  // Transport
+  {
+    name: "Car (Petrol) - per km",
+    category: "transport",
+    co2Value: 0.21,
+    unit: "km",
+  },
+  {
+    name: "Car (Diesel) - per km",
+    category: "transport",
+    co2Value: 0.17,
+    unit: "km",
+  },
+  { name: "Bus - per km", category: "transport", co2Value: 0.08, unit: "km" },
+  { name: "Train - per km", category: "transport", co2Value: 0.04, unit: "km" },
+  {
+    name: "Flight (Domestic) - per km",
+    category: "transport",
+    co2Value: 0.25,
+    unit: "km",
+  },
+  {
+    name: "Flight (International) - per km",
+    category: "transport",
+    co2Value: 0.15,
+    unit: "km",
+  },
+
+  // Food
+  { name: "Beef - per 100g", category: "food", co2Value: 6.0, unit: "100g" },
+  { name: "Chicken - per 100g", category: "food", co2Value: 1.6, unit: "100g" },
+  { name: "Fish - per 100g", category: "food", co2Value: 1.2, unit: "100g" },
+  {
+    name: "Vegetables - per 100g",
+    category: "food",
+    co2Value: 0.4,
+    unit: "100g",
+  },
+  { name: "Dairy - per 100ml", category: "food", co2Value: 0.6, unit: "100ml" },
+  { name: "Coffee - per cup", category: "food", co2Value: 0.05, unit: "cup" },
+
+  // Energy
+  {
+    name: "Electricity - per kWh",
+    category: "energy",
+    co2Value: 0.4,
+    unit: "kWh",
+  },
+  {
+    name: "Natural Gas - per kWh",
+    category: "energy",
+    co2Value: 0.2,
+    unit: "kWh",
+  },
+  {
+    name: "Heating Oil - per liter",
+    category: "energy",
+    co2Value: 2.5,
+    unit: "liter",
+  },
+
+  // Waste
+  {
+    name: "General Waste - per kg",
+    category: "waste",
+    co2Value: 0.5,
+    unit: "kg",
+  },
+  { name: "Recycling - per kg", category: "waste", co2Value: 0.1, unit: "kg" },
+];
+
+// =====================
 // Auth + API helpers
 // =====================
 const API_BASE = "/api";
@@ -56,10 +131,6 @@ async function getUserLogs(from, to) {
   return apiFetch(`/activities/my-logs?${query.join("&")}`);
 }
 
-async function getUserTotal(date) {
-  return apiFetch(`/activities/my-total?date=${date}`);
-}
-
 async function getWeeklySummary() {
   return apiFetch("/activities/weekly-summary");
 }
@@ -79,6 +150,32 @@ const form = document.getElementById("activity-form");
 const logContainer = document.getElementById("log-container");
 const summaryContainer = document.getElementById("summary");
 const leaderboardContainer = document.getElementById("leaderboard");
+const activitySelect = document.getElementById("activity-select");
+
+// =====================
+// Populate dropdown
+// =====================
+activities.forEach((act, i) => {
+  const opt = document.createElement("option");
+  opt.value = i;
+  opt.textContent = act.name;
+  activitySelect.appendChild(opt);
+});
+
+// Auto-fill on change
+activitySelect.addEventListener("change", () => {
+  const idx = activitySelect.value;
+  if (idx !== "") {
+    const act = activities[idx];
+    document.getElementById("category").value = act.category;
+    document.getElementById("unit").value = act.unit;
+    document.getElementById("co2-value").value = act.co2Value;
+  } else {
+    document.getElementById("category").value = "";
+    document.getElementById("unit").value = "";
+    document.getElementById("co2-value").value = "";
+  }
+});
 
 // =====================
 // Form handling
@@ -90,12 +187,19 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
+  const idx = document.getElementById("activity-select").value;
+  if (idx === "") {
+    alert("Please select an activity");
+    return;
+  }
+
+  const act = activities[idx];
   const activity = {
-    name: document.getElementById("activity-name").value,
-    category: document.getElementById("category").value,
-    unit: document.getElementById("unit").value,
+    name: act.name,
+    category: act.category,
+    unit: act.unit,
     quantity: parseFloat(document.getElementById("quantity").value),
-    co2Value: parseFloat(document.getElementById("co2-value").value),
+    co2Value: act.co2Value,
   };
 
   const date =

@@ -174,3 +174,52 @@ form button {
 #leaderboard li {
   margin: 0.2rem 0;
 }
+
+nav {
+  margin: 0.5rem 0;
+}
+nav a {
+  margin-right: 1rem;
+  text-decoration: none;
+  color: #1976d2;
+  font-weight: bold;
+}
+nav a:hover {
+  text-decoration: underline;
+}
+
+#leaderboard-section ol {
+  padding-left: 1.5rem;
+}
+
+#see-more-btn {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  background: #1976d2;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+#see-more-btn:hover {
+  background: #115293;
+}
+
+#see-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+nav {
+  margin: 0.5rem 0;
+}
+nav a {
+  margin-right: 1rem;
+  text-decoration: none;
+  color: #ffffff;
+  font-weight: bold;
+}
+nav a:hover {
+  text-decoration: underline;
+}
