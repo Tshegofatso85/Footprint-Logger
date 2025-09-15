@@ -117,6 +117,13 @@ function logoutUser() {
 // =====================
 // Activity logging
 // =====================
+
+async function deleteActivity(logId, activityId) {
+  return apiFetch(`/activities/${logId}/activities/${activityId}`, {
+    method: "DELETE",
+  });
+}
+
 function showLoader() {
   document.getElementById("loader").style.display = "block";
 }
@@ -230,35 +237,92 @@ form.addEventListener("submit", async (e) => {
 // =====================
 async function renderLogs() {
   if (!token) return;
+
   const logs = await getUserLogs();
+  const logContainer = document.getElementById("log-container");
   logContainer.innerHTML = "";
+
   logs.forEach((log) => {
-    const total = log.activities.reduce((s, a) => s + a.totalCO2, 0).toFixed(2);
+    const total = log.activities
+      .reduce((s, a) => s + (a.totalCO2 || 0), 0)
+      .toFixed(2);
+
     const div = document.createElement("div");
     div.className = "log-day";
-    div.innerHTML = `<h3>${log.date.split("T")[0]}</h3>
+
+    // If there are activities, show them; else show "No activities"
+    const activityList = log.activities.length
+      ? log.activities
+          .map(
+            (a) => `
+        <li>
+          ${a.name} - ${a.quantity} ${a.unit} → ${a.totalCO2} kg
+          <button data-log="${log._id}" data-activity="${a._id}" class="delete-btn">🗑️</button>
+        </li>`
+          )
+          .join("")
+      : "<li>No activities logged</li>";
+
+    div.innerHTML = `
+      <h3>${new Date(log.date).toISOString().split("T")[0]}</h3>
       <p>Total: ${total} kg CO₂</p>
-      <ul>${log.activities
-        .map(
-          (a) =>
-            `<li>${a.name} - ${a.quantity} ${a.unit} → ${a.totalCO2} kg</li>`
-        )
-        .join("")}</ul>`;
+      <ul>${activityList}</ul>
+    `;
     logContainer.appendChild(div);
   });
+
+  // Attach delete handlers
+  // Attach delete handlers
+  document.querySelectorAll(".delete-btn").forEach((btn) =>
+    btn.addEventListener("click", async (e) => {
+      const logId = btn.dataset.log;
+      const activityId = btn.dataset.activity;
+      if (confirm("Delete this activity?")) {
+        try {
+          const res = await deleteActivity(logId, activityId);
+          console.log("Delete response:", res); // optional: see what backend returns
+          await renderLogs();
+          await renderSummary();
+          alert("Activity deleted successfully!"); // show success only on success
+        } catch (err) {
+          console.error(err);
+          alert("Failed to delete activity");
+        }
+      }
+    })
+  );
 }
 
 async function renderSummary() {
   if (!token) return;
+
   const { summary, streak } = await getWeeklySummary();
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  // Build full 7-day summary array (fill missing days with zero)
+  const fullSummary = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setUTCDate(today.getUTCDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+    const dayData = summary.find((s) => s.date === dateStr);
+    fullSummary.push({
+      date: dateStr,
+      total: dayData ? dayData.total : 0,
+    });
+  }
+
+  // Render weekly summary
   summaryContainer.innerHTML = `
     <h3>Weekly Summary</h3>
     <ul>
-      ${summary.map((d) => `<li>${d.date}: ${d.total} kg</li>`).join("")}
+      ${fullSummary.map((d) => `<li>${d.date}: ${d.total} kg</li>`).join("")}
     </ul>
     <p>Streak: ${streak} days</p>
   `;
 
+  // Community average
   const community = await getCommunityAverage();
   summaryContainer.innerHTML += `
     <h3>Community Average</h3>

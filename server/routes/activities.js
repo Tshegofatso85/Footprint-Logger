@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const ActivityLog = require("../models/ActivityLog");
 const mongoose = require("mongoose");
+const authenticate = require("../middleware/auth");
 
 // helper: normalize date to midnight (UTC)
 function startOfDay(d) {
@@ -236,5 +237,71 @@ router.get("/leaderboard", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// delete a single activity from a user's log by logId + activityId
+// delete a single activity from a user's log by logId + activityId
+router.delete(
+  "/:logId/activities/:activityId",
+  authenticate,
+  async (req, res) => {
+    const { logId, activityId } = req.params;
+    const userId = req.user._id;
+
+    console.log("Attempting to delete activity");
+    console.log("User ID:", userId);
+    console.log("Log ID:", logId);
+    console.log("Activity ID:", activityId);
+
+    // Validate IDs
+    if (
+      !mongoose.Types.ObjectId.isValid(logId) ||
+      !mongoose.Types.ObjectId.isValid(activityId)
+    ) {
+      console.error("Invalid logId or activityId");
+      return res.status(400).json({ message: "Invalid logId or activityId" });
+    }
+
+    try {
+      // Find the log for this user
+      const log = await ActivityLog.findOne({ _id: logId, user: userId });
+      if (!log) {
+        console.error("Log not found for user");
+        return res.status(404).json({ message: "Log not found" });
+      }
+
+      // Find the activity subdocument
+      const activity = log.activities.id(activityId);
+      if (!activity) {
+        return res.status(404).json({ message: "Activity not found" });
+      }
+
+      // Remove the subdocument
+      await activity.deleteOne();
+
+      // If no activities remain, remove the whole log
+      if (log.activities.length === 0) {
+        await log.deleteOne();
+        console.log(
+          "Activity deleted; log removed as it had no more activities"
+        );
+        return res
+          .status(200)
+          .json({ message: "Activity deleted; log removed", logId });
+      }
+
+      // Otherwise, save the updated log
+      await log.save();
+
+      console.log("Activity deleted successfully");
+      res.status(200).json({ message: "Activity deleted successfully", log });
+    } catch (err) {
+      console.error("Error deleting activity:", err);
+      res.status(500).json({
+        message: "Server error while deleting activity",
+        error: err.message,
+      });
+    }
+  }
+);
 
 module.exports = router;
