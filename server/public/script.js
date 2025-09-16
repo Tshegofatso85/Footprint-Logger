@@ -230,6 +230,7 @@ form.addEventListener("submit", async (e) => {
     await logActivity(date, activity);
     await renderLogs();
     await renderSummary();
+    await renderActivityTable();
     alert("Activity logged!");
     form.reset();
   } catch (err) {
@@ -289,6 +290,7 @@ async function renderLogs() {
           console.log("Delete response:", res); // optional: see what backend returns
           await renderLogs();
           await renderSummary();
+          await renderActivityTable();
           alert("Activity deleted successfully!"); // show success only on success
         } catch (err) {
           console.error(err);
