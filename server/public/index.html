@@ -150,11 +150,11 @@
           updateUI(user);
           showLoader();
           await renderLogs();
-          await renderSummary();
-          await renderLeaderboard();
+          // await renderSummary();
+          // await renderLeaderboard();
           hideLoader();
         } catch (err) {
-          alert("Registration failed");
+          // alert("Registration failed");
           hideLoader();
         }
       });
@@ -168,11 +168,11 @@
           updateUI(user);
           showLoader();
           await renderLogs();
-          await renderSummary();
-          await renderLeaderboard();
+          // await renderSummary();
+          // await renderLeaderboard();
           hideLoader();
         } catch (err) {
-          alert("Login failed");
+          alert("Login failed" + err);
           hideLoader();
         }
       });
@@ -186,8 +186,11 @@
         showLoader();
         getWeeklySummary()
           .then(() => {
-            updateUI({ email: "Current User" });
-            return Promise.all([renderLogs(), renderSummary(), renderLeaderboard()]);
+            updateUI({
+              name: localStorage.getItem("name"),
+              email: localStorage.getItem("email"),
+            });
+            return Promise.all([renderLogs()]);
           })
           .catch(() => updateUI(null))
           .finally(() => hideLoader());

@@ -97,7 +97,7 @@ router.get("/weekly-summary", async (req, res) => {
     const agg = await ActivityLog.aggregate([
       {
         $match: {
-          user: mongoose.Types.ObjectId(userId),
+          user: new mongoose.mongo.ObjectId(userId),
           date: { $gte: start, $lte: end },
         },
       },

@@ -95,6 +95,8 @@ async function registerUser(email, password, name) {
   });
   token = data.token;
   localStorage.setItem("token", token);
+  localStorage.setItem("name", data.user.name);
+  localStorage.setItem("email", data.user.email);
   return data.user;
 }
 
@@ -105,12 +107,16 @@ async function loginUser(email, password) {
   });
   token = data.token;
   localStorage.setItem("token", token);
+  localStorage.setItem("name", data.user.name);
+  localStorage.setItem("email", data.user.email);
   return data.user;
 }
 
 function logoutUser() {
   token = null;
   localStorage.removeItem("token");
+  localStorage.removeItem("name");
+  localStorage.removeItem("email");
   alert("Logged out!");
 }
 
@@ -319,16 +325,16 @@ async function renderSummary() {
     <ul>
       ${fullSummary.map((d) => `<li>${d.date}: ${d.total} kg</li>`).join("")}
     </ul>
-    <p>Streak: ${streak} days</p>
-  `;
+    `;
+  //<p>Streak: ${streak} days</p>
 
   // Community average
-  const community = await getCommunityAverage();
-  summaryContainer.innerHTML += `
-    <h3>Community Average</h3>
-    <p>Users: ${community.usersCount}</p>
-    <p>Average per user: ${community.avgPerUser} kg</p>
-  `;
+  // const community = await getCommunityAverage();
+  // summaryContainer.innerHTML += `
+  //   <h3>Community Average</h3>
+  //   <p>Users: ${community.usersCount}</p>
+  //   <p>Average per user: ${community.avgPerUser} kg</p>
+  // `;
 }
 
 async function renderLeaderboard() {
@@ -351,6 +357,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (token) {
     await renderLogs();
     await renderSummary();
-    await renderLeaderboard();
+    // await renderLeaderboard();
   }
 });
