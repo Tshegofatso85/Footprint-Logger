@@ -304,4 +304,85 @@ router.delete(
   }
 );
 
+// router.get("/activities", authenticate, async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+//     const { category } = req.query; // optional query param
+
+//     // Build a filter for user
+//     let matchStage = { user: userId };
+//     if (category) {
+//       // only match logs with activities of that category
+//       matchStage["activities.category"] = category;
+//     }
+
+//     // Flatten activities with $unwind
+//     const activities = await ActivityLog.aggregate([
+//       { $match: { user: userId } },
+//       { $unwind: "$activities" },
+//       category
+//         ? { $match: { "activities.category": category } }
+//         : { $match: {} },
+//       {
+//         $project: {
+//           _id: 0,
+//           logId: "$_id",
+//           date: "$date",
+//           name: "$activities.name",
+//           activity: "$activities.activity",
+//           category: "$activities.category",
+//           unit: "$activities.unit",
+//           quantity: "$activities.quantity",
+//           co2Value: "$activities.co2Value",
+//           totalCO2: "$activities.totalCO2",
+//         },
+//       },
+//     ]);
+
+//     // Calculate total CO₂
+//     const totalCO2 = activities.reduce((sum, a) => sum + a.totalCO2, 0);
+
+//     res.json({
+//       total: activities.length,
+//       totalCO2,
+//       activities,
+//     });
+//   } catch (err) {
+//     console.error("Error fetching activities:", err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+// GET all activities for a user (with optional category filter)
+router.get("/all", async (req, res) => {
+  try {
+    const { category } = req.query;
+    const userId = req.user._id; // comes from authenticate middleware in server.js
+
+    const logs = await ActivityLog.find({ user: userId }).lean();
+
+    let activities = logs.flatMap((log) =>
+      log.activities.map((a) => ({
+        ...a,
+        date: log.date,
+      }))
+    );
+
+    if (category) {
+      activities = activities.filter((a) => a.category === category);
+    }
+
+    const totalCO2 = activities.reduce((sum, a) => sum + a.totalCO2, 0);
+
+    res.status(200).json({
+      activities,
+      total: activities.length,
+      totalCO2,
+    });
+  } catch (err) {
+    console.error("Error fetching activities:", err);
+    res.status(500).json({ error: "Failed to fetch activities" });
+  }
+});
+
 module.exports = router;

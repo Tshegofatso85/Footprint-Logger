@@ -102,6 +102,32 @@
       <div id="leaderboard"></div>
     </section>
 
+    <section id="activity-table" style="display:none;">
+      <h2>All Activities</h2>
+      <label for="filter-category">Filter by category:</label>
+      <select id="filter-category">
+        <option value="">All</option>
+        <option value="transport">Transport</option>
+        <option value="food">Food</option>
+        <option value="energy">Energy</option>
+        <option value="waste">Waste</option>
+      </select>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Quantity</th>
+            <th>Unit</th>
+            <th>Total CO₂</th>
+          </tr>
+        </thead>
+        <tbody id="activity-table-body"></tbody>
+      </table>
+      <p id="activity-total"></p>
+    </section>
+
     <script src="script.js"></script>
     <script>
       const regForm = document.getElementById("register-form");
@@ -110,6 +136,7 @@
       const welcomeMsg = document.getElementById("welcome-msg");
       const loggerSection = document.getElementById("logger-section");
       const dashboard = document.getElementById("dashboard");
+      const activityTable = document.getElementById("activity-table");
 
       function showLoader() {
         document.getElementById("loader").style.display = "block";
@@ -126,6 +153,7 @@
           logoutBtn.style.display = "inline-block";
           loggerSection.style.display = "block";
           dashboard.style.display = "block";
+          activityTable.style.display = "block";
         } else {
           welcomeMsg.textContent = "";
           regForm.style.display = "block";
@@ -133,6 +161,7 @@
           logoutBtn.style.display = "none";
           loggerSection.style.display = "none";
           dashboard.style.display = "none";
+          activityTable.style.display = "none";
           // Clear dashboard data when logged out
           document.getElementById("log-container").innerHTML = "";
           document.getElementById("summary").innerHTML = "";
@@ -150,6 +179,7 @@
           updateUI(user);
           showLoader();
           await renderLogs();
+          await renderActivityTable();
           // await renderSummary();
           // await renderLeaderboard();
           hideLoader();
@@ -168,6 +198,7 @@
           updateUI(user);
           showLoader();
           await renderLogs();
+          await renderActivityTable();
           // await renderSummary();
           // await renderLeaderboard();
           hideLoader();

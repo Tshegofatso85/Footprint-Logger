@@ -350,6 +350,41 @@ async function renderLeaderboard() {
   `;
 }
 
+async function getAllActivities(category = null) {
+  let url = "/activities/all";
+  if (category) url += `?category=${category}`;
+  const data = await apiFetch(url);
+  return data;
+}
+
+async function renderActivityTable(category = null) {
+  if (!token) return;
+
+  const data = await getAllActivities(category);
+
+  const tbody = document.getElementById("activity-table-body");
+  const totalEl = document.getElementById("activity-total");
+
+  tbody.innerHTML = "";
+
+  data.activities.forEach((a) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${new Date(a.date).toISOString().split("T")[0]}</td>
+      <td>${a.name}</td>
+      <td>${a.category}</td>
+      <td>${a.quantity}</td>
+      <td>${a.unit}</td>
+      <td>${a.totalCO2.toFixed(2)} kg</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  totalEl.textContent = `Total CO₂: ${data.totalCO2.toFixed(2)} kg across ${
+    data.total
+  } activities.`;
+}
+
 // =====================
 // Initial load
 // =====================
@@ -357,6 +392,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (token) {
     await renderLogs();
     await renderSummary();
+    await renderActivityTable();
     // await renderLeaderboard();
   }
 });
+
+document
+  .getElementById("filter-category")
+  .addEventListener("change", async (e) => {
+    await renderActivityTable(e.target.value || null);
+  });
