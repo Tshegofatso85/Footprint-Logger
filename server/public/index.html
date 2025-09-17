@@ -97,6 +97,7 @@
     <section id="dashboard" style="display:none;">
       <h2>Your Dashboard</h2>
       <div id="loader" style="display:none;">Loading...</div>
+      <h3 id="total-emissions">Total Emissions: 0 kg CO₂ with 0 activities.</h3>
       <div id="log-container"></div>
       <div id="summary"></div>
       <div id="leaderboard"></div>
@@ -180,6 +181,7 @@
           showLoader();
           await renderLogs();
           await renderActivityTable();
+          await renderEmissionTotal();
           // await renderSummary();
           // await renderLeaderboard();
           hideLoader();
@@ -199,11 +201,12 @@
           showLoader();
           await renderLogs();
           await renderActivityTable();
+          await renderEmissionTotal();
           // await renderSummary();
           // await renderLeaderboard();
           hideLoader();
         } catch (err) {
-          alert("Login failed" + err);
+          alert("Login failed: Please try again");
           hideLoader();
         }
       });

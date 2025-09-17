@@ -231,6 +231,7 @@ form.addEventListener("submit", async (e) => {
     await renderLogs();
     await renderSummary();
     await renderActivityTable();
+    await renderEmissionTotal();
     alert("Activity logged!");
     form.reset();
   } catch (err) {
@@ -279,7 +280,6 @@ async function renderLogs() {
   });
 
   // Attach delete handlers
-  // Attach delete handlers
   document.querySelectorAll(".delete-btn").forEach((btn) =>
     btn.addEventListener("click", async (e) => {
       const logId = btn.dataset.log;
@@ -291,6 +291,7 @@ async function renderLogs() {
           await renderLogs();
           await renderSummary();
           await renderActivityTable();
+          await renderEmissionTotal();
           alert("Activity deleted successfully!"); // show success only on success
         } catch (err) {
           console.error(err);
@@ -359,6 +360,18 @@ async function getAllActivities(category = null) {
   return data;
 }
 
+async function renderEmissionTotal() {
+  if (!token) return;
+  const data = await getAllActivities();
+  const totalEmersion = document.getElementById("total-emissions");
+
+  totalEmersion.textContent = `Total Emissions: ${data.totalCO2.toFixed(
+    2
+  )} kg CO₂ within ${
+    data.total === 1 ? "1 activity" : `${data.total} activities`
+  }`;
+}
+
 async function renderActivityTable(category = null) {
   if (!token) return;
 
@@ -395,6 +408,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     await renderLogs();
     await renderSummary();
     await renderActivityTable();
+    await renderEmissionTotal();
     // await renderLeaderboard();
   }
 });
