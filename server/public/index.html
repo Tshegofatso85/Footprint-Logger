@@ -103,6 +103,11 @@
       <div id="leaderboard"></div>
     </section>
 
+    <section id="chart-section" style="display:none;">
+      <h2>CO₂ by Category</h2>
+      <canvas id="categoryChart"></canvas>
+    </section>
+
     <section id="activity-table" style="display:none;">
       <h2>All Activities</h2>
       <label for="filter-category">Filter by category:</label>
@@ -129,6 +134,7 @@
       <p id="activity-total"></p>
     </section>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
     <script>
       const regForm = document.getElementById("register-form");

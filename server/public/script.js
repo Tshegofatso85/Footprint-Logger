@@ -380,6 +380,8 @@ async function renderActivityTable(category = null) {
   const tbody = document.getElementById("activity-table-body");
   const totalEl = document.getElementById("activity-total");
 
+  const chartSection = document.getElementById("chart-section");
+
   tbody.innerHTML = "";
 
   data.activities.forEach((a) => {
@@ -398,6 +400,56 @@ async function renderActivityTable(category = null) {
   totalEl.textContent = `Total CO₂: ${data.totalCO2.toFixed(2)} kg across ${
     data.total
   } activities.`;
+
+  // ======================
+  // Build pie chart by category
+  // ======================
+  if (data.activities.length > 0) {
+    chartSection.style.display = "block";
+
+    // aggregate CO₂ per category
+    const categoryTotals = {};
+    data.activities.forEach((a) => {
+      categoryTotals[a.category] =
+        (categoryTotals[a.category] || 0) + a.totalCO2;
+    });
+
+    const labels = Object.keys(categoryTotals);
+    const values = Object.values(categoryTotals);
+
+    // destroy previous chart if exists
+    if (categoryChart && typeof categoryChart.destroy === "function") {
+      categoryChart.destroy();
+    }
+
+    const ctx = document.getElementById("categoryChart").getContext("2d");
+    categoryChart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "CO₂ by Category",
+            data: values,
+            backgroundColor: [
+              "#FF6384",
+              "#36A2EB",
+              "#FFCE56",
+              "#4BC0C0",
+              "#9966FF",
+              "#FF9F40",
+            ],
+          },
+        ],
+      },
+    });
+  } else {
+    chartSection.style.display = "none";
+    if (categoryChart) {
+      categoryChart.destroy();
+      categoryChart = null;
+    }
+  }
 }
 
 // =====================
