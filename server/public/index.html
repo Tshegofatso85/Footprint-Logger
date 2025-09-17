@@ -138,6 +138,7 @@
       const loggerSection = document.getElementById("logger-section");
       const dashboard = document.getElementById("dashboard");
       const activityTable = document.getElementById("activity-table");
+      const chartSection = document.getElementById("chart-section");
 
       function showLoader() {
         document.getElementById("loader").style.display = "block";
@@ -155,6 +156,7 @@
           loggerSection.style.display = "block";
           dashboard.style.display = "block";
           activityTable.style.display = "block";
+          chartSection.style.display = "block";
         } else {
           welcomeMsg.textContent = "";
           regForm.style.display = "block";
@@ -163,6 +165,7 @@
           loggerSection.style.display = "none";
           dashboard.style.display = "none";
           activityTable.style.display = "none";
+          chartSection.style.display = "none";
           // Clear dashboard data when logged out
           document.getElementById("log-container").innerHTML = "";
           document.getElementById("summary").innerHTML = "";

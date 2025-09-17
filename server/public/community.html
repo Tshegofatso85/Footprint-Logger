@@ -14,77 +14,97 @@
       </nav>
     </header>
 
-    <section id="community-stats">
+    <section
+      id="login-prompt"
+      style="display:none; text-align:center; margin-top:50px;"
+    >
+      <button
+        onclick="window.location.href='index.html'"
+        style="padding:15px 30px; font-size:18px; cursor:pointer;"
+      >
+        Login / Register
+      </button>
+    </section>
+
+    <section id="community-stats" style="display:none;">
       <h2>Community Average</h2>
       <div id="community-average">Loading...</div>
     </section>
 
     <hr />
 
-    <section id="leaderboard-section">
+    <section id="leaderboard-section" style="display:none;">
       <h2>Low-Footprint Leaderboard</h2>
       <ol id="leaderboard"></ol>
       <button id="see-more-btn" style="display:none;">See More</button>
     </section>
 
     <script>
-      const API_BASE = "/api";
-      let token = localStorage.getItem("token") || null;
-      let leaderboardPage = 0;
-      const pageSize = 10;
+        const API_BASE = "/api";
+        let token = localStorage.getItem("token") || null;
+        let leaderboardPage = 0;
+        const pageSize = 10;
 
-      async function apiFetch(url) {
-        const headers = {};
-        if (token) headers["Authorization"] = `Bearer ${token}`;
-        const res = await fetch(API_BASE + url, { headers });
-        if (!res.ok) throw new Error("API error");
-        return res.json();
-      }
-
-      async function loadCommunityAverage() {
-        try {
-          const avg = await apiFetch("/activities/community-average");
-          document.getElementById("community-average").innerHTML = `
-            <p>Total Users: ${avg.usersCount}</p>
-            <p>Average per user: <strong>${avg.avgPerUser} kg CO₂</strong></p>
-          `;
-        } catch {
-          document.getElementById("community-average").textContent = "Failed to load";
+        async function apiFetch(url) {
+          const headers = {};
+          if (token) headers["Authorization"] = `Bearer ${token}`;
+          const res = await fetch(API_BASE + url, { headers });
+          if (!res.ok) throw new Error("API error");
+          return res.json();
         }
-      }
 
-      async function loadLeaderboard() {
-        try {
-          const allLeaders = await apiFetch("/activities/leaderboard?days=7");
-          const start = leaderboardPage * pageSize;
-          const end = start + pageSize;
-          const leaders = allLeaders.slice(start, end);
-
-          const list = document.getElementById("leaderboard");
-          leaders.forEach((u, i) => {
-            const li = document.createElement("li");
-            li.textContent = `${start + i + 1}. ${u.name || u.email} → ${u.avgDaily} kg/day`;
-            list.appendChild(li);
-          });
-
-          if (end < allLeaders.length) {
-            document.getElementById("see-more-btn").style.display = "block";
-          } else {
-            document.getElementById("see-more-btn").style.display = "none";
+        async function loadCommunityAverage() {
+          try {
+            const avg = await apiFetch("/activities/community-average");
+            document.getElementById("community-average").innerHTML = `
+              <p>Total Users: ${avg.usersCount}</p>
+              <p>Average per user: <strong>${avg.avgPerUser} kg CO₂</strong></p>
+            `;
+          } catch {
+            document.getElementById("community-average").textContent = "Failed to load";
           }
-        } catch (err) {
-          console.error(err);
         }
-      }
 
-      document.getElementById("see-more-btn").addEventListener("click", () => {
-        leaderboardPage++;
-        loadLeaderboard();
-      });
+        async function loadLeaderboard() {
+          try {
+            const allLeaders = await apiFetch("/activities/leaderboard?days=7");
+            const start = leaderboardPage * pageSize;
+            const end = start + pageSize;
+            const leaders = allLeaders.slice(start, end);
 
-      window.addEventListener("DOMContentLoaded", () => {
-        loadCommunityAverage();
-        loadLeaderboard();
+            const list = document.getElementById("leaderboard");
+            leaders.forEach((u, i) => {
+              const li = document.createElement("li");
+              li.textContent = `${start + i + 1}. ${u.name || u.email} → ${u.avgDaily} kg/day`;
+              list.appendChild(li);
+            });
+
+            if (end < allLeaders.length) {
+              document.getElementById("see-more-btn").style.display = "block";
+            } else {
+              document.getElementById("see-more-btn").style.display = "none";
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }
+
+        document.getElementById("see-more-btn").addEventListener("click", () => {
+          leaderboardPage++;
+          loadLeaderboard();
+        });
+
+        window.addEventListener("DOMContentLoaded", () => {
+        if (token) {
+          // logged in
+          document.getElementById("community-stats").style.display = "block";
+          document.getElementById("leaderboard-section").style.display = "block";
+          loadCommunityAverage();
+          loadLeaderboard();
+        } else {
+          // logged out
+          document.getElementById("login-prompt").style.display = "block";
+        }
       });
     </script>
   </body>
