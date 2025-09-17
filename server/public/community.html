@@ -73,9 +73,19 @@
             const leaders = allLeaders.slice(start, end);
 
             const list = document.getElementById("leaderboard");
+            list.innerHTML = "";
+
+            const loggedInName = localStorage.getItem("name");
+            const loggedInEmail = localStorage.getItem("email");
+
             leaders.forEach((u, i) => {
               const li = document.createElement("li");
-              li.textContent = `${start + i + 1}. ${u.name || u.email} → ${u.avgDaily} kg/day`;
+              li.textContent = `${u.name || u.email} → ${u.avgDaily} kg/day`;
+
+              if (u.name === loggedInName || u.email === loggedInEmail) {
+                li.style.color = "blue";
+                li.style.fontWeight = "bold";
+              }
               list.appendChild(li);
             });
 
