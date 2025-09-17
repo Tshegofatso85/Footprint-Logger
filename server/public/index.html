@@ -14,9 +14,7 @@
       </nav>
     </header>
 
-    <!-- ===================== -->
     <!-- Authentication -->
-    <!-- ===================== -->
     <section id="auth-section">
       <h2>Account</h2>
       <div id="auth-forms">
@@ -54,20 +52,16 @@
 
     <hr />
 
-    <!-- ===================== -->
     <!-- Activity logger -->
-    <!-- ===================== -->
     <section id="logger-section" style="display:none;">
       <h2>Log an Activity</h2>
       <form id="activity-form">
         <input type="date" id="date" />
 
-        <!-- Dropdown for predefined activities -->
         <select id="activity-select" required>
           <option value="">-- Select Activity --</option>
         </select>
 
-        <!-- Auto-filled fields -->
         <input type="text" id="category" placeholder="Category" readonly />
         <input type="text" id="unit" placeholder="Unit" readonly />
         <input
@@ -91,9 +85,7 @@
 
     <hr />
 
-    <!-- ===================== -->
     <!-- Dashboard -->
-    <!-- ===================== -->
     <section id="dashboard" style="display:none;">
       <h2>Your Dashboard</h2>
       <div id="loader" style="display:none;">Loading...</div>
@@ -105,7 +97,9 @@
 
     <section id="chart-section" style="display:none;">
       <h2>CO₂ by Category</h2>
-      <canvas id="categoryChart"></canvas>
+      <div style="max-width: 400px; margin: 20px auto;">
+        <canvas id="categoryChart"></canvas>
+      </div>
     </section>
 
     <section id="activity-table" style="display:none;">
@@ -188,11 +182,10 @@
           await renderLogs();
           await renderActivityTable();
           await renderEmissionTotal();
-          // await renderSummary();
-          // await renderLeaderboard();
+          await renderPieChart();
           hideLoader();
         } catch (err) {
-          // alert("Registration failed");
+          alert("Registration failed: Please try again");
           hideLoader();
         }
       });
@@ -208,8 +201,7 @@
           await renderLogs();
           await renderActivityTable();
           await renderEmissionTotal();
-          // await renderSummary();
-          // await renderLeaderboard();
+          await renderPieChart();
           hideLoader();
         } catch (err) {
           alert("Login failed: Please try again");

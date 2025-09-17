@@ -1,6 +1,3 @@
-// =====================
-// Predefined activities
-// =====================
 const activities = [
   // Transport
   {
@@ -73,9 +70,7 @@ const activities = [
   { name: "Recycling - per kg", category: "waste", co2Value: 0.1, unit: "kg" },
 ];
 
-// =====================
 // Auth + API helpers
-// =====================
 const API_BASE = "/api";
 let token = localStorage.getItem("token") || null;
 
@@ -120,10 +115,7 @@ function logoutUser() {
   alert("Logged out!");
 }
 
-// =====================
 // Activity logging
-// =====================
-
 async function deleteActivity(logId, activityId) {
   return apiFetch(`/activities/${logId}/activities/${activityId}`, {
     method: "DELETE",
@@ -163,18 +155,14 @@ async function getLeaderboard(days = 7) {
   return apiFetch(`/activities/leaderboard?days=${days}`);
 }
 
-// =====================
 // UI Elements
-// =====================
 const form = document.getElementById("activity-form");
 const logContainer = document.getElementById("log-container");
 const summaryContainer = document.getElementById("summary");
 const leaderboardContainer = document.getElementById("leaderboard");
 const activitySelect = document.getElementById("activity-select");
 
-// =====================
 // Populate dropdown
-// =====================
 activities.forEach((act, i) => {
   const opt = document.createElement("option");
   opt.value = i;
@@ -197,9 +185,7 @@ activitySelect.addEventListener("change", () => {
   }
 });
 
-// =====================
 // Form handling
-// =====================
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!token) {
@@ -232,6 +218,7 @@ form.addEventListener("submit", async (e) => {
     await renderSummary();
     await renderActivityTable();
     await renderEmissionTotal();
+    await renderPieChart();
     alert("Activity logged!");
     form.reset();
   } catch (err) {
@@ -240,9 +227,7 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// =====================
 // Rendering functions
-// =====================
 async function renderLogs() {
   if (!token) return;
 
@@ -258,7 +243,6 @@ async function renderLogs() {
     const div = document.createElement("div");
     div.className = "log-day";
 
-    // If there are activities, show them; else show "No activities"
     const activityList = log.activities.length
       ? log.activities
           .map(
@@ -287,11 +271,11 @@ async function renderLogs() {
       if (confirm("Delete this activity?")) {
         try {
           const res = await deleteActivity(logId, activityId);
-          console.log("Delete response:", res); // optional: see what backend returns
           await renderLogs();
           await renderSummary();
           await renderActivityTable();
           await renderEmissionTotal();
+          await renderPieChart();
           alert("Activity deleted successfully!"); // show success only on success
         } catch (err) {
           console.error(err);
@@ -309,7 +293,6 @@ async function renderSummary() {
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
 
-  // Build full 7-day summary array (fill missing days with zero)
   const fullSummary = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today);
@@ -322,22 +305,12 @@ async function renderSummary() {
     });
   }
 
-  // Render weekly summary
   summaryContainer.innerHTML = `
     <h3>Weekly Summary</h3>
     <ul>
       ${fullSummary.map((d) => `<li>${d.date}: ${d.total} kg</li>`).join("")}
     </ul>
     `;
-  //<p>Streak: ${streak} days</p>
-
-  // Community average
-  // const community = await getCommunityAverage();
-  // summaryContainer.innerHTML += `
-  //   <h3>Community Average</h3>
-  //   <p>Users: ${community.usersCount}</p>
-  //   <p>Average per user: ${community.avgPerUser} kg</p>
-  // `;
 }
 
 async function renderLeaderboard() {
@@ -380,8 +353,6 @@ async function renderActivityTable(category = null) {
   const tbody = document.getElementById("activity-table-body");
   const totalEl = document.getElementById("activity-total");
 
-  const chartSection = document.getElementById("chart-section");
-
   tbody.innerHTML = "";
 
   data.activities.forEach((a) => {
@@ -400,14 +371,17 @@ async function renderActivityTable(category = null) {
   totalEl.textContent = `Total CO₂: ${data.totalCO2.toFixed(2)} kg across ${
     data.total
   } activities.`;
+}
 
-  // ======================
-  // Build pie chart by category
-  // ======================
+async function renderPieChart() {
+  if (!token) return;
+
+  const data = await getAllActivities();
+  const chartSection = document.getElementById("chart-section");
+
   if (data.activities.length > 0) {
     chartSection.style.display = "block";
 
-    // aggregate CO₂ per category
     const categoryTotals = {};
     data.activities.forEach((a) => {
       categoryTotals[a.category] =
@@ -417,7 +391,6 @@ async function renderActivityTable(category = null) {
     const labels = Object.keys(categoryTotals);
     const values = Object.values(categoryTotals);
 
-    // destroy previous chart if exists
     if (categoryChart && typeof categoryChart.destroy === "function") {
       categoryChart.destroy();
     }
@@ -452,21 +425,21 @@ async function renderActivityTable(category = null) {
   }
 }
 
-// =====================
+// Event listeners
+document
+  .getElementById("filter-category")
+  .addEventListener("change", async (e) => {
+    await renderActivityTable(e.target.value || null);
+  });
+
 // Initial load
-// =====================
 window.addEventListener("DOMContentLoaded", async () => {
   if (token) {
     await renderLogs();
     await renderSummary();
     await renderActivityTable();
     await renderEmissionTotal();
+    await renderPieChart();
     // await renderLeaderboard();
   }
 });
-
-document
-  .getElementById("filter-category")
-  .addEventListener("change", async (e) => {
-    await renderActivityTable(e.target.value || null);
-  });

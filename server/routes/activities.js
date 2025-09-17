@@ -4,7 +4,7 @@ const ActivityLog = require("../models/ActivityLog");
 const mongoose = require("mongoose");
 const authenticate = require("../middleware/auth");
 
-// helper: normalize date to midnight (UTC)
+// normalize date to midnight (UTC)
 function startOfDay(d) {
   const date = new Date(d);
   date.setUTCHours(0, 0, 0, 0);
@@ -13,7 +13,6 @@ function startOfDay(d) {
 
 // create or append to a day log for user
 router.post("/log", async (req, res) => {
-  // expected body: { date: 'YYYY-MM-DD', activity: { name, category, unit, quantity, co2Value } }
   try {
     const userId = req.user._id;
     const { date, activity } = req.body;
@@ -33,7 +32,6 @@ router.post("/log", async (req, res) => {
       totalCO2: Number(totalCO2),
     };
 
-    // find existing day
     let log = await ActivityLog.findOne({ user: userId, date: day });
     if (!log) {
       log = new ActivityLog({ user: userId, date: day, activities: [item] });
@@ -52,7 +50,7 @@ router.post("/log", async (req, res) => {
 router.get("/my-logs", async (req, res) => {
   try {
     const userId = req.user._id;
-    const { from, to } = req.query; // optional YYYY-MM-DD
+    const { from, to } = req.query;
     const query = { user: userId };
     if (from || to) {
       query.date = {};
@@ -84,7 +82,7 @@ router.get("/my-total", async (req, res) => {
   }
 });
 
-// weekly summary: last 7 days totals for the user (returns array of {date, total})
+// weekly summary: last 7 days totals for the user
 router.get("/weekly-summary", async (req, res) => {
   try {
     const userId = req.user._id;
@@ -93,7 +91,6 @@ router.get("/weekly-summary", async (req, res) => {
     start.setUTCDate(end.getUTCDate() - 6);
     start.setUTCHours(0, 0, 0, 0);
 
-    // aggregate per day
     const agg = await ActivityLog.aggregate([
       {
         $match: {
@@ -106,7 +103,6 @@ router.get("/weekly-summary", async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
-    // build day list for full 7 days (fill zeros)
     const result = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(start);
@@ -119,8 +115,6 @@ router.get("/weekly-summary", async (req, res) => {
       });
     }
 
-    // streak: number of consecutive days ending today with total < some threshold (or >0)
-    // simple streak of days with any activity
     let streak = 0;
     for (let i = 6; i >= 0; i--) {
       const d = new Date(end);
@@ -239,7 +233,6 @@ router.get("/leaderboard", async (req, res) => {
 });
 
 // delete a single activity from a user's log by logId + activityId
-// delete a single activity from a user's log by logId + activityId
 router.delete(
   "/:logId/activities/:activityId",
   authenticate,
@@ -247,12 +240,6 @@ router.delete(
     const { logId, activityId } = req.params;
     const userId = req.user._id;
 
-    console.log("Attempting to delete activity");
-    console.log("User ID:", userId);
-    console.log("Log ID:", logId);
-    console.log("Activity ID:", activityId);
-
-    // Validate IDs
     if (
       !mongoose.Types.ObjectId.isValid(logId) ||
       !mongoose.Types.ObjectId.isValid(activityId)
@@ -262,37 +249,29 @@ router.delete(
     }
 
     try {
-      // Find the log for this user
       const log = await ActivityLog.findOne({ _id: logId, user: userId });
       if (!log) {
         console.error("Log not found for user");
         return res.status(404).json({ message: "Log not found" });
       }
 
-      // Find the activity subdocument
       const activity = log.activities.id(activityId);
       if (!activity) {
         return res.status(404).json({ message: "Activity not found" });
       }
 
-      // Remove the subdocument
       await activity.deleteOne();
 
-      // If no activities remain, remove the whole log
       if (log.activities.length === 0) {
         await log.deleteOne();
-        console.log(
-          "Activity deleted; log removed as it had no more activities"
-        );
+
         return res
           .status(200)
           .json({ message: "Activity deleted; log removed", logId });
       }
 
-      // Otherwise, save the updated log
       await log.save();
 
-      console.log("Activity deleted successfully");
       res.status(200).json({ message: "Activity deleted successfully", log });
     } catch (err) {
       console.error("Error deleting activity:", err);
@@ -303,55 +282,6 @@ router.delete(
     }
   }
 );
-
-// router.get("/activities", authenticate, async (req, res) => {
-//   try {
-//     const userId = req.user.id;
-//     const { category } = req.query; // optional query param
-
-//     // Build a filter for user
-//     let matchStage = { user: userId };
-//     if (category) {
-//       // only match logs with activities of that category
-//       matchStage["activities.category"] = category;
-//     }
-
-//     // Flatten activities with $unwind
-//     const activities = await ActivityLog.aggregate([
-//       { $match: { user: userId } },
-//       { $unwind: "$activities" },
-//       category
-//         ? { $match: { "activities.category": category } }
-//         : { $match: {} },
-//       {
-//         $project: {
-//           _id: 0,
-//           logId: "$_id",
-//           date: "$date",
-//           name: "$activities.name",
-//           activity: "$activities.activity",
-//           category: "$activities.category",
-//           unit: "$activities.unit",
-//           quantity: "$activities.quantity",
-//           co2Value: "$activities.co2Value",
-//           totalCO2: "$activities.totalCO2",
-//         },
-//       },
-//     ]);
-
-//     // Calculate total CO₂
-//     const totalCO2 = activities.reduce((sum, a) => sum + a.totalCO2, 0);
-
-//     res.json({
-//       total: activities.length,
-//       totalCO2,
-//       activities,
-//     });
-//   } catch (err) {
-//     console.error("Error fetching activities:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
 
 // GET all activities for a user (with optional category filter)
 router.get("/all", async (req, res) => {
