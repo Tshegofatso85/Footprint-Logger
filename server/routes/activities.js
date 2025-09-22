@@ -315,4 +315,17 @@ router.get("/all", async (req, res) => {
   }
 });
 
+// GET all activities for the community
+router.get("/all-community", authenticate, async (req, res) => {
+  try {
+    const activities = await ActivityLog.find(); // all users
+    const totalCO2 = activities.reduce((sum, a) => sum + a.totalCO2, 0);
+
+    res.json({ activities, totalCO2, total: activities.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch community activities" });
+  }
+});
+
 module.exports = router;
