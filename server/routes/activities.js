@@ -328,4 +328,58 @@ router.get("/all-community", authenticate, async (req, res) => {
   }
 });
 
+router.get("/weekly-goal", async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const userId = req.user.id;
+
+    // Start of current week (Sunday)
+    const startOfWeek = new Date();
+    startOfWeek.setHours(0, 0, 0, 0);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+    // Get activities
+    const activities = await ActivityLog.find({
+      user: userId,
+      date: { $gte: startOfWeek },
+    });
+
+    // Total CO₂ for the week
+    const totalCO2 = activities.reduce((sum, a) => {
+      const actSum = a.activities.reduce(
+        (s, act) => s + act.quantity * act.co2Value,
+        0
+      );
+      return sum + actSum;
+    }, 0);
+
+    // Weekly target (e.g., aim to stay under 10kg CO₂)
+    const weeklyTarget = 10; // kg
+    const remaining = Math.max(0, weeklyTarget - totalCO2);
+    const progress = Math.min(100, (totalCO2 / weeklyTarget) * 100);
+
+    // Tips
+    let tip;
+    if (remaining > 0) {
+      tip = `Great start! You can still save ${remaining.toFixed(
+        1
+      )}kg CO₂ this week. Try cycling instead of driving! 🚴‍♂️`;
+    } else {
+      tip = "Awesome! You stayed within your weekly CO₂ target 🎉";
+    }
+
+    const response = { totalCO2, weeklyTarget, remaining, progress, tip };
+    res.json(response);
+
+    // If using WebSocket (import sendTipUpdate from your socket file)
+    // sendTipUpdate(userId, response);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load weekly goal" });
+  }
+});
+
 module.exports = router;

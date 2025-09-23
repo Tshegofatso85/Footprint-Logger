@@ -128,6 +128,14 @@
       <p id="activity-total"></p>
     </section>
 
+    <hr />
+
+    <section id="weekly-goal-section" style="display:none;">
+      <h2>🌱 Weekly Goal</h2>
+      <p id="goal-summary">Loading...</p>
+      <p id="goal-tip"></p>
+    </section>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
     <script>
@@ -139,6 +147,7 @@
       const dashboard = document.getElementById("dashboard");
       const activityTable = document.getElementById("activity-table");
       const chartSection = document.getElementById("chart-section");
+      const weeklyGoalSection = document.getElementById("weekly-goal-section");
 
       function showLoader() {
         document.getElementById("loader").style.display = "block";
@@ -157,6 +166,7 @@
           dashboard.style.display = "block";
           activityTable.style.display = "block";
           chartSection.style.display = "block";
+          weeklyGoalSection.style.display = "block";
         } else {
           welcomeMsg.textContent = "";
           regForm.style.display = "block";
@@ -166,6 +176,7 @@
           dashboard.style.display = "none";
           activityTable.style.display = "none";
           chartSection.style.display = "none";
+          weeklyGoalSection.style.display = "none";
           // Clear dashboard data when logged out
           document.getElementById("log-container").innerHTML = "";
           document.getElementById("summary").innerHTML = "";
@@ -186,6 +197,8 @@
           await renderActivityTable();
           await renderEmissionTotal();
           await renderPieChart();
+          await setupWebSocket();
+          await loadWeeklyGoal();
           hideLoader();
         } catch (err) {
           alert("Registration failed: Please try again");
@@ -205,6 +218,8 @@
           await renderActivityTable();
           await renderEmissionTotal();
           await renderPieChart();
+          await setupWebSocket();
+          await loadWeeklyGoal();
           hideLoader();
         } catch (err) {
           alert("Login failed: Please try again");

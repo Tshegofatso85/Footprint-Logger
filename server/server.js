@@ -8,6 +8,10 @@ const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const activitiesRoutes = require("./routes/activities");
 const authenticate = require("./middleware/auth");
+const WebSocket = require("ws");
+
+const wss = new WebSocket.Server({ noServer: true });
+const userSockets = new Map(); // Map userId -> ws
 
 const app = express();
 app.use(cors());
@@ -43,6 +47,30 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+// Upgrade HTTP server to handle WebSocket
+app.on("upgrade", (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    // Assume token is passed as query ?token=...
+    const url = new URL(request.url, `http://${request.headers.host}`);
+    const token = url.searchParams.get("token");
+
+    if (!token) return ws.close();
+    // Decode token to get userId (simplified, depends on your auth)
+    const userId = decodeToken(token).userId;
+    userSockets.set(userId, ws);
+
+    ws.on("close", () => userSockets.delete(userId));
+  });
+});
+
+// Function to send tip update to a user
+function sendTipUpdate(userId, tip) {
+  const ws = userSockets.get(userId);
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ tip }));
+  }
+}
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));

@@ -219,6 +219,8 @@ form.addEventListener("submit", async (e) => {
     await renderActivityTable();
     await renderEmissionTotal();
     await renderPieChart();
+    await setupWebSocket();
+    await loadWeeklyGoal();
     alert("Activity logged!");
     form.reset();
   } catch (err) {
@@ -276,6 +278,8 @@ async function renderLogs() {
           await renderActivityTable();
           await renderEmissionTotal();
           await renderPieChart();
+          await setupWebSocket();
+          await loadWeeklyGoal();
           alert("Activity deleted successfully!"); // show success only on success
         } catch (err) {
           console.error(err);
@@ -425,6 +429,47 @@ async function renderPieChart() {
   }
 }
 
+async function loadWeeklyGoal() {
+  if (!localStorage.getItem("token")) return;
+
+  try {
+    const res = await apiFetch("/activities/weekly-goal");
+    document.getElementById(
+      "goal-summary"
+    ).textContent = `You have emitted ${res.totalCO2.toFixed(
+      2
+    )}kg CO2 this week. Goal: ${
+      res.weeklyTarget
+    }kg. Remaining: ${res.remaining.toFixed(2)}kg.`;
+    document.getElementById("goal-tip").textContent = res.tip;
+    document.getElementById("weekly-goal-section").style.display = "block";
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// Call this after login
+if (localStorage.getItem("token")) {
+  loadWeeklyGoal();
+}
+
+function setupWebSocket() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  const ws = new WebSocket(`ws://localhost:4000?token=${token}`);
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.tip) {
+      document.getElementById("goal-tip").textContent = data.tip;
+    }
+  };
+}
+
+// Call after login or page load
+// setupWebSocket();
+
 // Event listeners
 document
   .getElementById("filter-category")
@@ -440,6 +485,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     await renderActivityTable();
     await renderEmissionTotal();
     await renderPieChart();
+    await loadWeeklyGoal();
+    await setupWebSocket();
     // await renderLeaderboard();
   }
 });
