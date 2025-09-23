@@ -41,114 +41,70 @@
 
     <hr />
 
-    <!-- <section id="dominant-category-section" style="display:none;">
-      <h2>Category Emissions (Highest → Lowest)</h2>
-      <ul id="category-ranking"></ul>
-    </section> -->
-
     <section id="dominant-category-section" style="display:none;">
       <h2>Community Category Emissions (Highest → Lowest)</h2>
       <ul id="category-ranking"></ul>
     </section>
 
     <script>
-          const API_BASE = "/api";
-          let token = localStorage.getItem("token") || null;
-          let leaderboardPage = 0;
-          const pageSize = 10;
+        const API_BASE = "/api";
+        let token = localStorage.getItem("token") || null;
+        let leaderboardPage = 0;
+        const pageSize = 10;
 
-          async function apiFetch(url) {
-            const headers = {};
-            if (token) headers["Authorization"] = `Bearer ${token}`;
-            const res = await fetch(API_BASE + url, { headers });
-            if (!res.ok) throw new Error("API error");
-            return res.json();
+        async function apiFetch(url) {
+          const headers = {};
+          if (token) headers["Authorization"] = `Bearer ${token}`;
+          const res = await fetch(API_BASE + url, { headers });
+          if (!res.ok) throw new Error("API error");
+          return res.json();
+        }
+
+        async function loadCommunityAverage() {
+          try {
+            const avg = await apiFetch("/activities/community-average");
+            document.getElementById("community-average").innerHTML = `
+              <p>Total Users: ${avg.usersCount}</p>
+              <p>Average per user: <strong>${avg.avgPerUser} kg CO₂</strong></p>
+            `;
+          } catch {
+            document.getElementById("community-average").textContent = "Failed to load";
           }
+        }
 
-          async function loadCommunityAverage() {
-            try {
-              const avg = await apiFetch("/activities/community-average");
-              document.getElementById("community-average").innerHTML = `
-                <p>Total Users: ${avg.usersCount}</p>
-                <p>Average per user: <strong>${avg.avgPerUser} kg CO₂</strong></p>
-              `;
-            } catch {
-              document.getElementById("community-average").textContent = "Failed to load";
-            }
-          }
+        async function loadLeaderboard() {
+          try {
+            const allLeaders = await apiFetch("/activities/leaderboard?days=7");
+            const start = leaderboardPage * pageSize;
+            const end = start + pageSize;
+            const leaders = allLeaders.slice(start, end);
 
-          async function loadLeaderboard() {
-            try {
-              const allLeaders = await apiFetch("/activities/leaderboard?days=7");
-              const start = leaderboardPage * pageSize;
-              const end = start + pageSize;
-              const leaders = allLeaders.slice(start, end);
+            const list = document.getElementById("leaderboard");
+            list.innerHTML = "";
 
-              const list = document.getElementById("leaderboard");
-              list.innerHTML = "";
+            const loggedInName = localStorage.getItem("name");
+            const loggedInEmail = localStorage.getItem("email");
 
-              const loggedInName = localStorage.getItem("name");
-              const loggedInEmail = localStorage.getItem("email");
+            leaders.forEach((u, i) => {
+              const li = document.createElement("li");
+              li.textContent = `${u.name || u.email} → ${u.avgDaily} kg/day`;
 
-              leaders.forEach((u, i) => {
-                const li = document.createElement("li");
-                li.textContent = `${u.name || u.email} → ${u.avgDaily} kg/day`;
-
-                if (u.name === loggedInName || u.email === loggedInEmail) {
-                  li.style.color = "blue";
-                  li.style.fontWeight = "bold";
-                }
-                list.appendChild(li);
-              });
-
-              if (end < allLeaders.length) {
-                document.getElementById("see-more-btn").style.display = "block";
-              } else {
-                document.getElementById("see-more-btn").style.display = "none";
+              if (u.name === loggedInName || u.email === loggedInEmail) {
+                li.style.color = "blue";
+                li.style.fontWeight = "bold";
               }
-            } catch (err) {
-              console.error(err);
+              list.appendChild(li);
+            });
+
+            if (end < allLeaders.length) {
+              document.getElementById("see-more-btn").style.display = "block";
+            } else {
+              document.getElementById("see-more-btn").style.display = "none";
             }
+          } catch (err) {
+            console.error(err);
           }
-
-        //   async function loadDominantCategory() {
-        //     try {
-        //       const activities = await apiFetch("/activities/all"); // fetch all activities for the user
-        //       if (!activities.activities || activities.activities.length === 0) {
-        //         document.getElementById("dominant-category-section").style.display =
-        //           "none";
-        //         return;
-        //       }
-
-        //       // group emissions by category
-        //       const totals = {};
-        //       activities.activities.forEach((a) => {
-        //         totals[a.category] = (totals[a.category] || 0) + a.totalCO2;
-        //       });
-
-        //       // sort categories from highest → lowest
-        //       const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-
-        //       // build the list
-        //       const list = document.getElementById("category-ranking");
-        //       list.innerHTML = "";
-        //       sorted.forEach(([category, total]) => {
-        //         const li = document.createElement("li");
-        //         li.textContent = `${category}: ${total.toFixed(2)} kg CO₂`;
-        //         list.appendChild(li);
-        //       });
-
-        //       // show the section
-        //       document.getElementById("dominant-category-section").style.display =
-        //         "block";
-        //     } catch (err) {
-        //       console.error(err);
-        //       document.getElementById("category-ranking").innerHTML =
-        //         "<li>Failed to load</li>";
-        //       document.getElementById("dominant-category-section").style.display =
-        //         "block";
-        //     }
-        //  }
+        }
 
         async function loadCommunityCategoryRanking() {
           try {

@@ -448,7 +448,6 @@ async function loadWeeklyGoal() {
   }
 }
 
-// Call this after login
 if (localStorage.getItem("token")) {
   loadWeeklyGoal();
 }
@@ -467,9 +466,6 @@ function setupWebSocket() {
   };
 }
 
-// Call after login or page load
-setupWebSocket();
-
 // Event listeners
 document
   .getElementById("filter-category")
@@ -487,6 +483,5 @@ window.addEventListener("DOMContentLoaded", async () => {
     await renderPieChart();
     await loadWeeklyGoal();
     await setupWebSocket();
-    // await renderLeaderboard();
   }
 });

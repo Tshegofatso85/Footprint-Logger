@@ -38,19 +38,8 @@ mongoose
 // API
 app.use("/api/auth", authRoutes);
 app.use("/api/activities", authenticate, activitiesRoutes);
-
-// optionally: some public endpoints (e.g. community average and leaderboard) without auth
-//app.get(
-//  "/api/public/community-average",
-//  require("./routes/activities").communityAverage
-//); // alternative: export function
-// but simpler: keep community and leaderboard behind auth for now (or duplicate as public if you want)
-
-// Serve static frontend files. You uploaded a basic UI (index.html, script.js, style.css)
-// If you place them in a /public folder, Express can serve them. We'll assume you put the files in ./public
 app.use(express.static(path.join(__dirname, "public")));
 
-// for SPA fallback:
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -58,26 +47,17 @@ app.get("*", (req, res) => {
 // Upgrade HTTP server to handle WebSocket
 app.on("upgrade", (request, socket, head) => {
   wss.handleUpgrade(request, socket, head, (ws) => {
-    // Assume token is passed as query ?token=...
     const url = new URL(request.url, `http://${request.headers.host}`);
     const token = url.searchParams.get("token");
 
     if (!token) return ws.close();
-    // Decode token to get userId (simplified, depends on your auth)
+
     const userId = decodeToken(token).userId;
     userSockets.set(userId, ws);
 
     ws.on("close", () => userSockets.delete(userId));
   });
 });
-
-// // Function to send tip update to a user
-// function sendTipUpdate(userId, tip) {
-//   const ws = userSockets.get(userId);
-//   if (ws && ws.readyState === WebSocket.OPEN) {
-//     ws.send(JSON.stringify({ tip }));
-//   }
-// }
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));

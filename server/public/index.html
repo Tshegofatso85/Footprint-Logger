@@ -18,7 +18,6 @@
     <section id="auth-section">
       <h2>Account</h2>
       <div id="auth-forms">
-        <!-- Register -->
         <form id="register-form">
           <h3>Register</h3>
           <input type="text" id="reg-name" placeholder="Name" required />
@@ -32,7 +31,6 @@
           <button type="submit">Register</button>
         </form>
 
-        <!-- Login -->
         <form id="login-form">
           <h3>Login</h3>
           <input type="email" id="login-email" placeholder="Email" required />
@@ -52,7 +50,6 @@
 
     <hr />
 
-    <!-- Activity logger -->
     <section id="logger-section" style="display:none;">
       <h2>Log an Activity</h2>
       <form id="activity-form">
@@ -85,7 +82,6 @@
 
     <hr />
 
-    <!-- Dashboard -->
     <section id="dashboard" style="display:none;">
       <h2>Your Dashboard</h2>
       <div id="loader" style="display:none;">Loading...</div>
@@ -177,7 +173,6 @@
           activityTable.style.display = "none";
           chartSection.style.display = "none";
           weeklyGoalSection.style.display = "none";
-          // Clear dashboard data when logged out
           document.getElementById("log-container").innerHTML = "";
           document.getElementById("summary").innerHTML = "";
           document.getElementById("leaderboard").innerHTML = "";

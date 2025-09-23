@@ -35,8 +35,6 @@ router.post("/register", async (req, res) => {
 
     const weeklyGoal = await analyseWeeklyGoal(user._id);
 
-    sendWeeklyGoalUpdate(user._id, weeklyGoal);
-
     res.json({
       token,
       user: { id: user._id, email: user.email, name: user.name },
@@ -66,8 +64,6 @@ router.post("/login", async (req, res) => {
     });
 
     const weeklyGoal = await analyseWeeklyGoal(user._id);
-
-    sendWeeklyGoalUpdate(user._id, weeklyGoal);
 
     res.json({
       token,
