@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { analyseWeeklyGoal } = require("../utils/weeklyGoal");
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
@@ -32,9 +33,14 @@ router.post("/register", async (req, res) => {
       expiresIn: JWT_EXPIRES_IN,
     });
 
+    const weeklyGoal = await analyseWeeklyGoal(user._id);
+
+    sendWeeklyGoalUpdate(user._id, weeklyGoal);
+
     res.json({
       token,
       user: { id: user._id, email: user.email, name: user.name },
+      weeklyGoal,
     });
   } catch (err) {
     console.error(err);
@@ -59,9 +65,14 @@ router.post("/login", async (req, res) => {
       expiresIn: JWT_EXPIRES_IN,
     });
 
+    const weeklyGoal = await analyseWeeklyGoal(user._id);
+
+    sendWeeklyGoalUpdate(user._id, weeklyGoal);
+
     res.json({
       token,
       user: { id: user._id, email: user.email, name: user.name },
+      weeklyGoal,
     });
   } catch (err) {
     console.error(err);

@@ -436,7 +436,7 @@ async function loadWeeklyGoal() {
     const res = await apiFetch("/activities/weekly-goal");
     document.getElementById(
       "goal-summary"
-    ).textContent = `You have emitted ${res.totalCO2.toFixed(
+    ).textContent = `Emitted: ${res.totalCO2.toFixed(
       2
     )}kg CO2 this week. Goal: ${
       res.weeklyTarget
@@ -468,7 +468,7 @@ function setupWebSocket() {
 }
 
 // Call after login or page load
-// setupWebSocket();
+setupWebSocket();
 
 // Event listeners
 document

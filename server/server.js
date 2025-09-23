@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const http = require("http");
 
 const authRoutes = require("./routes/auth");
 const activitiesRoutes = require("./routes/activities");
@@ -13,9 +14,15 @@ const WebSocket = require("ws");
 const wss = new WebSocket.Server({ noServer: true });
 const userSockets = new Map(); // Map userId -> ws
 
+const { initWebSocket } = require("./utils/ws");
+
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+
+// HTTP server
+const server = http.createServer(app);
+initWebSocket(server);
 
 // connect to MongoDB
 const MONGO_URI =
@@ -64,13 +71,13 @@ app.on("upgrade", (request, socket, head) => {
   });
 });
 
-// Function to send tip update to a user
-function sendTipUpdate(userId, tip) {
-  const ws = userSockets.get(userId);
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ tip }));
-  }
-}
+// // Function to send tip update to a user
+// function sendTipUpdate(userId, tip) {
+//   const ws = userSockets.get(userId);
+//   if (ws && ws.readyState === WebSocket.OPEN) {
+//     ws.send(JSON.stringify({ tip }));
+//   }
+// }
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));

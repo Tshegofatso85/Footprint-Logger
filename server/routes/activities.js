@@ -3,6 +3,7 @@ const router = express.Router();
 const ActivityLog = require("../models/ActivityLog");
 const mongoose = require("mongoose");
 const authenticate = require("../middleware/auth");
+const { sendTipUpdate } = require("../utils/ws");
 
 // normalize date to midnight (UTC)
 function startOfDay(d) {
@@ -364,18 +365,21 @@ router.get("/weekly-goal", async (req, res) => {
     // Tips
     let tip;
     if (remaining > 0) {
-      tip = `Great start! You can still save ${remaining.toFixed(
+      tip = `You’ve emitted ${totalCO2.toFixed(1)}kg CO₂ so far. 
+      You can still emit ${remaining.toFixed(
         1
-      )}kg CO₂ this week. Try cycling instead of driving! 🚴‍♂️`;
+      )}kg before reaching your weekly target. 
+      Try cycling instead of driving to stay lower 🚴‍♂️`;
     } else {
-      tip = "Awesome! You stayed within your weekly CO₂ target 🎉";
+      tip = `You’ve exceeded your weekly CO₂ target. 
+      Consider reducing high-emission activities next week 🌍`;
     }
 
     const response = { totalCO2, weeklyTarget, remaining, progress, tip };
     res.json(response);
 
     // If using WebSocket (import sendTipUpdate from your socket file)
-    // sendTipUpdate(userId, response);
+    sendTipUpdate(userId, response);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to load weekly goal" });
