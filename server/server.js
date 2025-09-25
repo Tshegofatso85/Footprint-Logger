@@ -12,7 +12,7 @@ const authenticate = require("./middleware/auth");
 const WebSocket = require("ws");
 
 const wss = new WebSocket.Server({ noServer: true });
-const userSockets = new Map(); // Map userId -> ws
+const userSockets = new Map();
 
 const { initWebSocket } = require("./utils/ws");
 
@@ -25,8 +25,7 @@ const server = http.createServer(app);
 initWebSocket(server);
 
 // connect to MongoDB
-const MONGO_URI =
-  process.env.MONGO_URI || "mongodb://localhost:27017/footprintdb";
+const MONGO_URI = process.env.MONGO_URI;
 mongoose
   .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("Mongo connected"))
